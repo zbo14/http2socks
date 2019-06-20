@@ -22,6 +22,8 @@ case $1 in
       -e SOCKS_PORT=$SOCKS_PORT \
       --init \
       --name http2socks \
+      --network="socksproxy" \
+      --network-alias="http2socks" \
       -p $HTTP_PORT:$HTTP_PORT \
       --restart=always \
       http2socks
