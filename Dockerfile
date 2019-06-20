@@ -4,9 +4,9 @@ COPY . /
 
 RUN apk update && \
     apk upgrade && \
-    adduser -D httpproxy
+    adduser -D http2socks
 
-USER httpproxy
+USER http2socks
 
 ENTRYPOINT \
   HTTP_PORT=$HTTP_PORT \

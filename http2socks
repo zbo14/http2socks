@@ -5,13 +5,13 @@ cd $DIR
 
 case $1 in
   build)
-    docker build --no-cache -t httpproxy .
+    docker build --no-cache -t http2socks .
     ;;
 
   start)
     if [[ -z $HTTP_PORT || -z $SOCKS_PORT ]]
     then
-      echo "Usage: HTTP_PORT=\"\" [SOCKS_HOST=\"\"] SOCKS_PORT=\"\" httpproxy <start>"
+      echo "Usage: HTTP_PORT= SOCKS_HOST= SOCKS_PORT= http2socks <start>"
       exit
     fi
 
@@ -21,18 +21,18 @@ case $1 in
       -e SOCKS_HOST=$SOCKS_HOST \
       -e SOCKS_PORT=$SOCKS_PORT \
       --init \
-      --name httpproxy \
+      --name http2socks \
       -p $HTTP_PORT:$HTTP_PORT \
       --restart=always \
-      httpproxy
+      http2socks
     ;;
 
   stop)
-    docker rm -f httpproxy
+    docker rm -f http2socks
     ;;
 
   *)
-    echo $'Usage: [ARG1="" ARG2="" ...] httpproxy <command>
+    echo $'Usage: [ARG1= ARG2= ...] http2socks <command>
 
 Commands:
   build     Build the Docker image
