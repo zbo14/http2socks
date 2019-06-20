@@ -1,0 +1,35 @@
+{
+  "name": "httpproxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "doc": "jsdoc lib README.md && open out/index.html",
+    "start": "node index.js",
+    "test": "nyc mocha --exit"
+  },
+  "author": "Zachary Balder",
+  "devDependencies": {
+    "eslint": "5.16.0",
+    "eslint-config-standard": "12.0.0",
+    "eslint-plugin-import": "2.17.3",
+    "eslint-plugin-node": "9.1.0",
+    "eslint-plugin-promise": "4.1.1",
+    "eslint-plugin-standard": "4.0.0",
+    "jsdoc": "3.6.2",
+    "lolex": "4.1.0",
+    "mocha": "6.1.4",
+    "nyc": "14.1.1"
+  },
+  "nyc": {
+    "check-coverage": true,
+    "per-file": true,
+    "lines": 100,
+    "statements": 100,
+    "functions": 100,
+    "branches": 100,
+    "reporter": [
+      "html",
+      "text"
+    ]
+  }
+}

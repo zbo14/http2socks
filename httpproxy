@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+DIR=$(dirname "$(readlink $0)")
+cd $DIR
+
+case $1 in
+  start)
+    if [[ -z $HTTP_PORT || -z $SOCKS_PORT ]]
+    then
+      echo "Usage: HTTP_PORT=\"\" [SOCKS_HOST=\"\"] SOCKS_PORT=\"\" httpproxy <start>"
+      exit
+    fi
+
+    HTTP_PORT=$HTTP_PORT \
+    SOCKS_HOST=$SOCKS_HOST \
+    SOCKS_PORT=$SOCKS_PORT \
+    node index.js
+    ;;
+
+  *)
+    echo $'Usage: [ARG1="" ARG2="" ...] httpproxy <command>
+
+Commands:
+  start     Start the HTTP proxy'
+    ;;
+esac
