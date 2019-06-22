@@ -17,9 +17,9 @@ const connect = () => {
   })
 
   return new Promise((resolve, reject) => {
-    req.on('connect', (res, sock) => {
+    req.on('connect', (res, conn) => {
       res.on('data', () => {})
-      res.on('end', () => resolve({ code: res.statusCode, sock }))
+      res.on('end', () => resolve({ code: res.statusCode, conn }))
       res.on('error', reject)
     })
 
@@ -48,28 +48,108 @@ describe('lib/http-proxy', () => {
       const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
       buf.writeUInt16BE(443, 2)
 
-      this.server.once('connection', sock => {
-        sock.write(buf)
-        this.sock = sock
+      this.server.once('connection', conn => {
+        conn.write(buf)
+        this.conn = conn
       })
 
-      const { code, sock } = await connect()
+      const { code, conn } = await connect()
 
       assert.strictEqual(code, 200)
 
       const promise = new Promise((resolve, reject) => {
-        this.sock.once('data', () => this.sock.once('data', resolve))
-        sock.once('error', reject)
-        this.sock.once('error', reject)
-        sock.write('foo')
+        this.conn.once('data', () => this.conn.once('data', resolve))
+        conn.once('error', reject)
+        this.conn.once('error', reject)
+        conn.write('foo')
       })
 
       assert.deepStrictEqual(await promise, Buffer.from('foo'))
     })
 
+    it('handles connect request, ends SOCKS connection after client ends HTTP connection', async () => {
+      const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
+      buf.writeUInt16BE(443, 2)
+
+      this.server.once('connection', conn => {
+        conn.on('data', () => {}).write(buf)
+        this.conn = conn
+      })
+
+      const { code, conn } = await connect()
+
+      assert.strictEqual(code, 200)
+
+      const promise = new Promise(resolve => this.conn.once('end', resolve))
+
+      conn.end()
+
+      await promise
+    })
+
+    it('handles connect request, ends SOCKS connection after client destroys HTTP connection', async () => {
+      const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
+      buf.writeUInt16BE(443, 2)
+
+      this.server.once('connection', conn => {
+        conn.on('data', () => {}).write(buf)
+        this.conn = conn
+      })
+
+      const { code, conn } = await connect()
+
+      assert.strictEqual(code, 200)
+
+      const promise = new Promise(resolve => this.conn.once('end', resolve))
+
+      conn.once('error', () => {}).destroy(new Error('whoops'))
+
+      await promise
+    })
+
+    it('handles connect request, ends HTTP connection after server ends SOCKS connection', async () => {
+      const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
+      buf.writeUInt16BE(443, 2)
+
+      this.server.once('connection', conn => {
+        conn.on('data', () => {}).write(buf)
+        this.conn = conn
+      })
+
+      const { code, conn } = await connect()
+
+      assert.strictEqual(code, 200)
+
+      const promise = new Promise(resolve => conn.once('end', resolve))
+
+      this.conn.end()
+
+      await promise
+    })
+
+    it('handles connect request, ends HTTP connection after server destroys SOCKS connection', async () => {
+      const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
+      buf.writeUInt16BE(443, 2)
+
+      this.server.once('connection', conn => {
+        conn.on('data', () => {}).write(buf)
+        this.conn = conn
+      })
+
+      const { code, conn } = await connect()
+
+      assert.strictEqual(code, 200)
+
+      const promise = new Promise(resolve => conn.once('end', resolve))
+
+      this.conn.once('error', () => {}).destroy(new Error('whoops'))
+
+      await promise
+    })
+
     it('handles error', async () => {
       const buf = Buffer.from([ 0x0, 0x5b, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ])
-      this.server.once('connection', sock => sock.write(buf))
+      this.server.once('connection', conn => conn.write(buf))
       const { code } = await connect()
       assert.deepStrictEqual(code, 500)
     })

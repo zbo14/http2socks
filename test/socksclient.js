@@ -12,7 +12,7 @@ const socksPort = 10459
 describe('lib/socks-client', () => {
   beforeEach(done => {
     this.client = new SOCKSClient()
-    this.client.sock = new EventEmitter()
+    this.client.conn = new EventEmitter()
     this.clock = lolex.install()
     this.server = net.createServer()
     this.server.listen(socksPort, '0.0.0.0', done)
@@ -26,7 +26,7 @@ describe('lib/socks-client', () => {
   describe('#connect()', () => {
     it('mocks connection error', async () => {
       const promise = this.client.connect('foobar.com', 443, socksHost, socksPort)
-      this.client.sock.emit('error', new Error('whoops'))
+      this.client.conn.emit('error', new Error('whoops'))
 
       try {
         await promise
@@ -42,16 +42,18 @@ describe('lib/socks-client', () => {
       const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
       buf.writeUInt16BE(443, 2)
 
-      this.client.sock.emit('data', buf)
+      this.client.conn.emit('data', buf)
 
-      assert.deepStrictEqual(await promise, { port: 443, host: '1.2.3.4' })
+      const result = await promise
+
+      assert(result instanceof net.Socket)
     })
   })
 
   describe('#handleData()', () => {
     it('overflows buffer', async () => {
       const promise = new Promise(resolve => {
-        this.client.sock.destroy = resolve
+        this.client.conn.destroy = resolve
       })
 
       this.client.handleData(Buffer.alloc(9))
@@ -68,8 +70,8 @@ describe('lib/socks-client', () => {
       const buf = Buffer.alloc(8)
       buf[0] = 0x1
 
-      this.client.sock.on('data', chunk => this.client.handleData(chunk))
-      this.client.sock.emit('data', buf)
+      this.client.conn.on('data', chunk => this.client.handleData(chunk))
+      this.client.conn.emit('data', buf)
 
       try {
         await promise
@@ -85,8 +87,8 @@ describe('lib/socks-client', () => {
       const buf = Buffer.alloc(8)
       buf[1] = 0x5b
 
-      this.client.sock.on('data', chunk => this.client.handleData(chunk))
-      this.client.sock.emit('data', buf)
+      this.client.conn.on('data', chunk => this.client.handleData(chunk))
+      this.client.conn.emit('data', buf)
 
       try {
         await promise
@@ -99,7 +101,7 @@ describe('lib/socks-client', () => {
     it('throws on timeout', async () => {
       const promise = this.client.readResponse()
 
-      this.client.sock.destroy = err => this.client.sock.emit('error', err)
+      this.client.conn.destroy = err => this.client.conn.emit('error', err)
 
       this.clock.tick(60e3)
 
@@ -116,8 +118,8 @@ describe('lib/socks-client', () => {
       const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
       buf.writeUInt16BE(443, 2)
 
-      this.client.sock.on('data', chunk => this.client.handleData(chunk))
-      this.client.sock.emit('data', buf)
+      this.client.conn.on('data', chunk => this.client.handleData(chunk))
+      this.client.conn.emit('data', buf)
 
       const result = await promise
 
