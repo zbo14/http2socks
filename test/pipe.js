@@ -1,21 +1,37 @@
 'use strict'
 
 const assert = require('assert')
-const EventEmitter = require('events')
+const { Duplex } = require('stream')
 const lolex = require('lolex')
 const net = require('net')
-const SOCKSClient = require('../lib/socksclient')
+const Pipe = require('../lib/pipe')
 
-const socksHost = '0.0.0.0'
+const createConn = () => {
+  const arr = []
+
+  return new Duplex({
+    read (size) {
+      this.push(arr.shift())
+    },
+
+    write (chunk, encoding, cb) {
+      arr.push(Buffer.from(chunk, encoding))
+      cb()
+    }
+  })
+}
+
+const socksHost = '127.0.0.1'
 const socksPort = 10459
 
 describe('lib/socks-client', () => {
   beforeEach(done => {
-    this.client = new SOCKSClient()
-    this.client.conn = new EventEmitter()
+    const httpConn = createConn()
+    this.pipe = new Pipe(httpConn)
+    this.pipe.socksConn = createConn()
     this.clock = lolex.install()
     this.server = net.createServer()
-    this.server.listen(socksPort, '0.0.0.0', done)
+    this.server.listen(socksPort, '127.0.0.1', done)
   })
 
   afterEach(() => {
@@ -25,8 +41,8 @@ describe('lib/socks-client', () => {
 
   describe('#connect()', () => {
     it('mocks connection error', async () => {
-      const promise = this.client.connect('foobar.com', 443, socksHost, socksPort)
-      this.client.conn.emit('error', new Error('whoops'))
+      const promise = this.pipe.connect('foobar.com', 443, socksHost, socksPort)
+      this.pipe.socksConn.emit('error', new Error('whoops'))
 
       try {
         await promise
@@ -37,41 +53,40 @@ describe('lib/socks-client', () => {
     })
 
     it('connects', async () => {
-      const promise = this.client.connect('foobar.com', 443, socksHost, socksPort)
+      const promise = this.pipe.connect('foobar.com', 443, socksHost, socksPort)
 
       const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
       buf.writeUInt16BE(443, 2)
 
-      this.client.conn.emit('data', buf)
+      this.pipe.socksConn.emit('data', buf)
 
       const result = await promise
 
-      assert(result instanceof net.Socket)
+      assert.deepStrictEqual(result, { host: '1.2.3.4', port: 443 })
     })
   })
 
   describe('#handleData()', () => {
     it('overflows buffer', async () => {
       const promise = new Promise(resolve => {
-        this.client.conn.destroy = resolve
+        this.pipe.end = resolve
       })
 
-      this.client.handleData(Buffer.alloc(9))
+      this.pipe.handleData(Buffer.alloc(9))
 
-      const { message } = await promise
-      assert.strictEqual(message, 'Buffer overflow')
+      await promise
     })
   })
 
   describe('#readResponse()', () => {
     it('throws when it doesn\'t get null byte', async () => {
-      const promise = this.client.readResponse()
+      const promise = this.pipe.readResponse()
 
       const buf = Buffer.alloc(8)
       buf[0] = 0x1
 
-      this.client.conn.on('data', chunk => this.client.handleData(chunk))
-      this.client.conn.emit('data', buf)
+      this.pipe.socksConn.on('data', chunk => this.pipe.handleData(chunk))
+      this.pipe.socksConn.emit('data', buf)
 
       try {
         await promise
@@ -82,13 +97,13 @@ describe('lib/socks-client', () => {
     })
 
     it('throws when request rejected or failed', async () => {
-      const promise = this.client.readResponse()
+      const promise = this.pipe.readResponse()
 
       const buf = Buffer.alloc(8)
       buf[1] = 0x5b
 
-      this.client.conn.on('data', chunk => this.client.handleData(chunk))
-      this.client.conn.emit('data', buf)
+      this.pipe.socksConn.on('data', chunk => this.pipe.handleData(chunk))
+      this.pipe.socksConn.emit('data', buf)
 
       try {
         await promise
@@ -99,9 +114,7 @@ describe('lib/socks-client', () => {
     })
 
     it('throws on timeout', async () => {
-      const promise = this.client.readResponse()
-
-      this.client.conn.destroy = err => this.client.conn.emit('error', err)
+      const promise = this.pipe.readResponse()
 
       this.clock.tick(60e3)
 
@@ -113,13 +126,26 @@ describe('lib/socks-client', () => {
       }
     })
 
+    it('throws on error during wait', async () => {
+      const promise = this.pipe.readResponse()
+
+      this.pipe.socksConn.emit('error', new Error('whoops'))
+
+      try {
+        await promise
+        assert.fail('Should throw error')
+      } catch ({ message }) {
+        assert.strictEqual(message, 'whoops')
+      }
+    })
+
     it('reads response', async () => {
-      const promise = this.client.readResponse()
+      const promise = this.pipe.readResponse()
       const buf = Buffer.from([ 0x0, 0x5a, 0x0, 0x0, 0x1, 0x2, 0x3, 0x4 ])
       buf.writeUInt16BE(443, 2)
 
-      this.client.conn.on('data', chunk => this.client.handleData(chunk))
-      this.client.conn.emit('data', buf)
+      this.pipe.socksConn.on('data', chunk => this.pipe.handleData(chunk))
+      this.pipe.socksConn.emit('data', buf)
 
       const result = await promise
 
@@ -129,9 +155,9 @@ describe('lib/socks-client', () => {
 
   describe('#writeRequest()', () => {
     it('writes request for IP address', async () => {
-      this.client.write = x => x
+      this.pipe.writeSOCKS = x => x
 
-      const result = await this.client.writeRequest(443, '1.2.3.4')
+      const result = await this.pipe.writeRequest(443, '1.2.3.4')
 
       assert.deepStrictEqual(result,
         Buffer.from([ 0x4, 0x1, 0x1, 0xbb, 0x1, 0x2, 0x3, 0x4, 0x0 ])
@@ -139,9 +165,9 @@ describe('lib/socks-client', () => {
     })
 
     it('writes request for domain name', async () => {
-      this.client.write = x => x
+      this.pipe.writeSOCKS = x => x
 
-      const result = await this.client.writeRequest(443, 'foobar.com')
+      const result = await this.pipe.writeRequest(443, 'foobar.com')
 
       assert.deepStrictEqual(result,
         Buffer.from([ 0x4, 0x1, 0x1, 0xbb, 0x0, 0x0, 0x0, 0x1, 0x0, ...Buffer.from('foobar.com'), 0x0 ])

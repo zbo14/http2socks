@@ -3,14 +3,14 @@
 const assert = require('assert')
 const http = require('http')
 const net = require('net')
-const HTTPProxy = require('../lib/httpproxy')
+const HTTPProxy = require('../lib/proxy')
 
 const socksPort = 10545
 const httpPort = 10546
 
 const connect = () => {
   const req = http.request({
-    host: '0.0.0.0',
+    host: '127.0.0.1',
     port: httpPort,
     method: 'CONNECT',
     path: 'foobar.com:443'
@@ -19,8 +19,8 @@ const connect = () => {
   return new Promise((resolve, reject) => {
     req.on('connect', (res, conn) => {
       res.on('data', () => {})
-      res.on('end', () => resolve({ code: res.statusCode, conn }))
-      res.on('error', reject)
+        .on('end', () => resolve({ code: res.statusCode, conn }))
+        .on('error', reject)
     })
 
     req.on('error', reject).end()
@@ -35,7 +35,7 @@ describe('lib/http-proxy', () => {
 
       await Promise.all([
         this.proxy.start({ httpPort, socksPort }),
-        new Promise(resolve => this.server.listen(socksPort, '0.0.0.0', resolve))
+        new Promise(resolve => this.server.listen(socksPort, '127.0.0.1', resolve))
       ])
     })
 
@@ -150,8 +150,13 @@ describe('lib/http-proxy', () => {
     it('handles error', async () => {
       const buf = Buffer.from([ 0x0, 0x5b, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ])
       this.server.once('connection', conn => conn.write(buf))
-      const { code } = await connect()
-      assert.deepStrictEqual(code, 500)
+
+      try {
+        await connect()
+        assert.fail('Should throw error')
+      } catch ({ message }) {
+        assert.notStrictEqual(message, 'Should throw error')
+      }
     })
   })
 

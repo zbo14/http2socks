@@ -1,6 +1,6 @@
 'use strict'
 
-const HTTPProxy = require('./lib/httpproxy')
+const HTTPProxy = require('./lib/proxy')
 
 const proxy = new HTTPProxy()
 
