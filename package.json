@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "doc": "jsdoc lib README.md && open out/index.html",
+    "lint": "eslint lib test",
     "start": "node index.js",
     "test": "nyc mocha --exit"
   },

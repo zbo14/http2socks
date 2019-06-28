@@ -1,0 +1,44 @@
+#!/bin/bash -e
+
+DIR=$(dirname "$(readlink $0)")
+cd $DIR
+
+case $1 in
+  build)
+    docker build --no-cache -t http2socks .
+    ;;
+
+  start)
+    if [[ -z $HTTP_PORT || -z $SOCKS_PORT ]]
+    then
+      echo "Usage: HTTP_PORT= SOCKS_PORT= [SOCKS_HOST=] http2socks <start>"
+      exit
+    fi
+
+    docker run \
+      -d \
+      -e HTTP_PORT=$HTTP_PORT \
+      -e SOCKS_HOST=${SOCKS_HOST:-socksproxy} \
+      -e SOCKS_PORT=$SOCKS_PORT \
+      --init \
+      --name http2socks \
+      --network="socksproxy" \
+      --network-alias="http2socks" \
+      -p $HTTP_PORT:$HTTP_PORT \
+      --restart=always \
+      http2socks
+    ;;
+
+  stop)
+    docker rm -f http2socks
+    ;;
+
+  *)
+    echo $'Usage: [ARG1= ARG2= ...] http2socks <command>
+
+Commands:
+  build     Build the Docker image
+  start     Start a Docker container running the HTTP proxy
+  stop      Stop/remove the Docker container'
+    ;;
+esac
