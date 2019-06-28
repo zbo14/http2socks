@@ -1,6 +1,6 @@
 # http2socks
 
-An HTTP proxy that routes traffic through [socksproxy](https://github.com/zbo14/socksproxy).
+A Dockerized HTTP proxy that routes traffic through [socksproxy](https://github.com/zbo14/socksproxy).
 
 Intended for clients that don't support SOCKS.
 
@@ -46,6 +46,12 @@ Stop/remove the Docker container.
 
 Run the unit tests for the HTTP proxy.
 
+## Lint
+
+`npm lint`
+
+Lint the source and test files.
+
 ## Documentation
 
 `npm run doc`
@@ -57,3 +63,5 @@ Generate the code documentation and open in browser.
 Please do!
 
 If you find a bug, think of an enhancement, or just have a question, feel free to [open an issue](https://github.com/zbo14/http2socks/issues/new). You're also welcome to [create a pull request](https://github.com/zbo14/http2socks/compare/develop...) addressing an issue. You should push your changes to a feature branch and request merge to `develop`.
+
+Make sure linting/tests pass and coverage is 💯 before creating a pull request!
