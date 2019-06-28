@@ -11,14 +11,14 @@ case $1 in
   start)
     if [[ -z $HTTP_PORT || -z $SOCKS_PORT ]]
     then
-      echo "Usage: HTTP_PORT= SOCKS_HOST= SOCKS_PORT= http2socks <start>"
+      echo "Usage: HTTP_PORT= SOCKS_PORT= [SOCKS_HOST=] http2socks <start>"
       exit
     fi
 
     docker run \
       -d \
       -e HTTP_PORT=$HTTP_PORT \
-      -e SOCKS_HOST=$SOCKS_HOST \
+      -e SOCKS_HOST=${SOCKS_HOST:-socksproxy} \
       -e SOCKS_PORT=$SOCKS_PORT \
       --init \
       --name http2socks \
