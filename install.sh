@@ -1,7 +1,9 @@
 #!/bin/bash -e
 
-cd "$(dirname $0)"
+chmod u+x http2socks.js
+cp http2socks.js /usr/bin/
 
-chmod u+x http2socks
+cp http2socks.service /etc/systemd/system/
 
-ln -s $PWD/http2socks /usr/local/bin
+mkdir -p /etc/http2socks/
+cp http2socks.conf /etc/https2socks/

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-HTTP_PORT=$HTTP_PORT \
-SOCKS_HOST=$SOCKS_HOST \
-SOCKS_PORT=$SOCKS_PORT \
-node index.js
