@@ -1,44 +1,49 @@
 # http2socks
 
-A Dockerized HTTP proxy that routes traffic through [socksproxy](https://github.com/zbo14/socksproxy).
+An HTTP proxy that routes traffic through [socksproxy](https://github.com/zbo14/socksproxy).
 
 Intended for clients that don't support SOCKS.
 
 ## Install
 
-Make sure you have [Docker](https://docs.docker.com/install/) installed.
+Clone the repo and `sudo sh install.sh`.
 
-Then `git clone` the repo and `sh /path/to/http2socks/install.sh`.
+### For development
 
-For development/testing, install [Node](https://nodejs.org/en/download/) and [nvm](https://github.com/nvm-sh/nvm#installation-and-update) if you haven't already.
+Install [nvm](https://github.com/nvm-sh/nvm#installation-and-update) if you haven't already.
 
-Then `cd` into the project directory, `nvm i`, and `npm i`.
+Then `nvm i` and `npm i`.
 
 ## Usage
 
-### Build
-
-`$ http2socks build`
-
-Build the Docker image for the HTTP proxy.
+`http2socks` is a systemd service so you can use `systemctl` commands.
 
 ### Start
 
-`$ HTTP_PORT= SOCKS_PORT= [SOCKS_HOST=] http2socks start`
-
-Start a Docker container running the HTTP proxy.
-
-**Note:** you must [create the Docker network](https://github.com/zbo14/socksproxy#create-network) before starting the container.
-
-The proxy maps to `HTTP_PORT` and communicates with a `socksproxy` instance with hostname `SOCKS_HOST` listening on `SOCKS_PORT`.
-
-`SOCKS_HOST` defaults to "socksproxy", assuming `socksproxy` and `http2socks` are running on the same Docker host.
+`sudo systemctl start http2socks`
 
 ### Stop
 
-`$ http2socks stop`
+`sudo systemctl stop http2socks`
 
-Stop/remove the Docker container.
+### View logs
+
+`sudo journalctl -u http2socks`
+
+### Config
+
+The config file `/etc/http2socks/http2socks.conf` contains the following:
+
+```sh
+## The port the HTTP proxy listens on
+HTTP_PORT=17898
+
+## The address of the socksproxy instance
+SOCKS_HOST="127.0.0.1"
+
+## The port socksproxy is listening on
+SOCKS_PORT=17896
+```
 
 ## Test
 
