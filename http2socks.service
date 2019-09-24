@@ -5,6 +5,7 @@ Description=http2socks systemd service.
 Type=simple
 ExecStart=/usr/bin/env node /usr/bin/http2socks.js
 EnvironmentFile=/etc/http2socks/http2socks.conf
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

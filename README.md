@@ -42,7 +42,7 @@ HTTP_PORT=17898
 SOCKS_HOST="127.0.0.1"
 
 ## The port socksproxy is listening on
-SOCKS_PORT=17896
+SOCKS_PORT=17897
 ```
 
 ## Test
