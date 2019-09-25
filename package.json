@@ -5,10 +5,15 @@
   "scripts": {
     "doc": "jsdoc lib README.md && open out/index.html",
     "lint": "eslint lib test",
-    "start": "node index.js",
+    "log": "pm2 logs http2socks",
+    "start": "HTTP_PORT=17898 SOCKS_HOST=127.0.0.1 SOCKS_PORT=17897 pm2 start http2socks.js",
+    "stop": "pm2 stop http2socks",
     "test": "nyc mocha --exit"
   },
   "author": "Zachary Balder",
+  "dependencies": {
+    "pm2": "3.5.1"
+  },
   "devDependencies": {
     "eslint": "5.16.0",
     "eslint-config-standard": "12.0.0",

@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 'use strict'
 
 const HTTPProxy = require('./lib/proxy')

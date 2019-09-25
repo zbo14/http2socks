@@ -6,44 +6,23 @@ Intended for clients that don't support SOCKS.
 
 ## Install
 
-Clone the repo and `sudo sh install.sh`.
-
-### For development
-
 Install [nvm](https://github.com/nvm-sh/nvm#installation-and-update) if you haven't already.
 
-Then `nvm i` and `npm i`.
+Then clone the repo, `cd` into it, `nvm i`, and `npm i`.
 
 ## Usage
 
-`http2socks` is a systemd service so you can use `systemctl` commands.
-
 ### Start
 
-`sudo systemctl start http2socks`
+`HTTP_PORT= SOCKS_HOST= SOCKS_PORT= npm start`
 
 ### Stop
 
-`sudo systemctl stop http2socks`
+`npm stop`
 
 ### View logs
 
-`sudo journalctl -u http2socks`
-
-### Config
-
-The config file `/etc/http2socks/http2socks.conf` contains the following:
-
-```sh
-## The port the HTTP proxy listens on
-HTTP_PORT=17898
-
-## The address of the socksproxy instance
-SOCKS_HOST="127.0.0.1"
-
-## The port socksproxy is listening on
-SOCKS_PORT=17897
-```
+`npm run log`
 
 ## Test
 
