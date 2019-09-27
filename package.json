@@ -6,7 +6,7 @@
     "doc": "jsdoc lib README.md && open out/index.html",
     "lint": "eslint lib test",
     "log": "pm2 logs http2socks",
-    "start": "HTTP_PORT=17898 SOCKS_HOST=127.0.0.1 SOCKS_PORT=17897 pm2 start http2socks.js",
+    "start": "HTTP_PORT=${HTTP_PORT:-17898} SOCKS_HOST=${SOCKS_HOST:-127.0.0.1} SOCKS_PORT=${SOCKS_PORT:-17897} pm2 start http2socks",
     "stop": "pm2 stop http2socks",
     "test": "nyc mocha --exit"
   },
