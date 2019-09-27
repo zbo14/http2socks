@@ -6,39 +6,23 @@ Intended for clients that don't support SOCKS.
 
 ## Install
 
-Make sure you have [Docker](https://docs.docker.com/install/) installed.
+Install [nvm](https://github.com/nvm-sh/nvm#installation-and-update) if you haven't already.
 
-Then `git clone` the repo and `sh /path/to/http2socks/install.sh`.
-
-For development/testing, install [Node](https://nodejs.org/en/download/) and [nvm](https://github.com/nvm-sh/nvm#installation-and-update) if you haven't already.
-
-Then `cd` into the project directory, `nvm i`, and `npm i`.
+Then clone the repo, `cd` into it, `nvm i`, and `npm i`.
 
 ## Usage
 
-### Build
-
-`$ http2socks build`
-
-Build the Docker image for the HTTP proxy.
-
 ### Start
 
-`$ HTTP_PORT= SOCKS_PORT= [SOCKS_HOST=] http2socks start`
-
-Start a Docker container running the HTTP proxy.
-
-**Note:** you must [create the Docker network](https://github.com/zbo14/socksproxy#create-network) before starting the container.
-
-The proxy maps to `HTTP_PORT` and communicates with a `socksproxy` instance with hostname `SOCKS_HOST` listening on `SOCKS_PORT`.
-
-`SOCKS_HOST` defaults to "socksproxy", assuming `socksproxy` and `http2socks` are running on the same Docker host.
+`HTTP_PORT= SOCKS_HOST= SOCKS_PORT= npm start`
 
 ### Stop
 
-`$ http2socks stop`
+`npm stop`
 
-Stop/remove the Docker container.
+### View logs
+
+`npm run log`
 
 ## Test
 
