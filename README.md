@@ -1,6 +1,6 @@
 # http2socks
 
-A Dockerized HTTP proxy that routes traffic through [socksproxy](https://github.com/zbo14/socksproxy).
+An HTTP proxy that routes traffic through [socksproxy](https://github.com/zbo14/socksproxy).
 
 Intended for clients that don't support SOCKS.
 
@@ -14,7 +14,9 @@ Then clone the repo, `cd` into it, `nvm i`, and `npm i`.
 
 ### Start
 
-`HTTP_PORT= SOCKS_HOST= SOCKS_PORT= npm start`
+**Note:** default values for named parameters are shown.
+
+`HTTP_PORT=17898 SOCKS_HOST="127.0.0.1" SOCKS_PORT=17897 npm start`
 
 ### Stop
 
